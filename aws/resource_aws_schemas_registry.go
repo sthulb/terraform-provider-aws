@@ -99,7 +99,7 @@ func resourceAwsSchemasRegistryRead(d *schema.ResourceData, meta interface{}) er
 func resourceAwsSchemasRegistryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).schemasconn
 
-	registry_name := d.Get("registry_name").(string)
+	registryName := d.Get("registry_name").(string)
 
 	if d.HasChange("description") {
 		modifyOpts := &schemas.UpdateRegistryInput{
@@ -108,15 +108,16 @@ func resourceAwsSchemasRegistryUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if _, err := conn.UpdateRegistry(modifyOpts); err != nil {
-			return fmt.Errorf("error updating Schema Registry (%s): %s", registry_name, err)
+			return fmt.Errorf("error updating Schema Registry (%s): %s", registryName, err)
 		}
 	}
 	if d.HasChange("tags") {
+		tags := d.Get("tags").(map[string]interface{})
 		if _, err := conn.TagResource(&schemas.TagResourceInput{
 			ResourceArn: aws.String(d.Id()),
-			Tags:        keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SchemasTags(),
+			Tags:        keyvaluetags.New(tags).IgnoreAws().SchemasTags(),
 		}); err != nil {
-			return fmt.Errorf("error updating Schema Registry tags (%s): %s", registry_name, err)
+			return fmt.Errorf("error updating Schema Registry tags (%s): %s", registryName, err)
 		}
 	}
 
@@ -126,10 +127,10 @@ func resourceAwsSchemasRegistryUpdate(d *schema.ResourceData, meta interface{}) 
 func resourceAwsSchemasRegistryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).schemasconn
 
-	registry_name := d.Get("registry_name").(string)
+	registryName := d.Get("registry_name").(string)
 
 	deleteOpts := &schemas.DeleteRegistryInput{
-		RegistryName: aws.String(registry_name),
+		RegistryName: aws.String(registryName),
 	}
 
 	if _, err := conn.DeleteRegistry(deleteOpts); err != nil {
@@ -137,7 +138,7 @@ func resourceAwsSchemasRegistryDelete(d *schema.ResourceData, meta interface{}) 
 			return nil
 		}
 
-		return fmt.Errorf("error deleting Schema Registry (%s): %s", registry_name, err)
+		return fmt.Errorf("error deleting Schema Registry (%s): %s", registryName, err)
 	}
 
 	return nil

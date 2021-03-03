@@ -17,6 +17,10 @@ func resourceAwsSchemasRegistry() *schema.Resource {
 		Delete: resourceAwsSchemasRegistryDelete,
 
 		Schema: map[string]*schema.Schema{
+			"registry_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"registry_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -54,7 +58,7 @@ func resourceAwsSchemasRegistryCreate(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] Schemas Create config: #{*createOpts}")
 	createResp, err := conn.CreateRegistry(createOpts)
 	if err != nil {
-		return fmt.Errorf("error creating Schema Registry: %s", err)
+		return fmt.Errorf("error creating Schemas Registry: %s", err)
 	}
 
 	d.SetId(aws.StringValue(createResp.RegistryArn))
@@ -80,11 +84,15 @@ func resourceAwsSchemasRegistryRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	if err := d.Set("registry_name", registry.RegistryName); err != nil {
+	if err := d.Set("registry_arn", aws.StringValue(registry.RegistryArn)); err != nil {
 		return err
 	}
 
-	if err := d.Set("description", registry.Description); err != nil {
+	if err := d.Set("registry_name", aws.StringValue(registry.RegistryName)); err != nil {
+		return err
+	}
+
+	if err := d.Set("description", aws.StringValue(registry.Description)); err != nil {
 		return err
 	}
 
@@ -107,17 +115,21 @@ func resourceAwsSchemasRegistryUpdate(d *schema.ResourceData, meta interface{}) 
 			Description:  aws.String(d.Get("description").(string)),
 		}
 
+		log.Printf("[DEBUG] Schemas Update Registry: #{*modifyOpts}")
 		if _, err := conn.UpdateRegistry(modifyOpts); err != nil {
-			return fmt.Errorf("error updating Schema Registry (%s): %s", registryName, err)
+			return fmt.Errorf("error updating Schemas Registry (%s): %s", registryName, err)
 		}
 	}
 	if d.HasChange("tags") {
 		tags := d.Get("tags").(map[string]interface{})
+
+		log.Printf("[DEBUG] Schemas Update Registry Tags: #{*tags}")
+
 		if _, err := conn.TagResource(&schemas.TagResourceInput{
 			ResourceArn: aws.String(d.Id()),
 			Tags:        keyvaluetags.New(tags).IgnoreAws().SchemasTags(),
 		}); err != nil {
-			return fmt.Errorf("error updating Schema Registry tags (%s): %s", registryName, err)
+			return fmt.Errorf("error updating Schemas Registry tags (%s): %s", registryName, err)
 		}
 	}
 
@@ -133,12 +145,13 @@ func resourceAwsSchemasRegistryDelete(d *schema.ResourceData, meta interface{}) 
 		RegistryName: aws.String(registryName),
 	}
 
+	log.Printf("[DEBUG] Schemas Delete Registry: #{*deleteOpts}")
 	if _, err := conn.DeleteRegistry(deleteOpts); err != nil {
 		if isAWSErr(err, "ValidationException", "") {
 			return nil
 		}
 
-		return fmt.Errorf("error deleting Schema Registry (%s): %s", registryName, err)
+		return fmt.Errorf("error deleting Schemas Registry (%s): %s", registryName, err)
 	}
 
 	return nil

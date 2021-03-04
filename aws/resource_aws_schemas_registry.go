@@ -23,13 +23,11 @@ func resourceAwsSchemasRegistry() *schema.Resource {
 			},
 			"registry_name": {
 				Type:     schema.TypeString,
-				Computed: true,
 				Required: true,
 			},
 
 			"description": {
 				Type:     schema.TypeString,
-				Computed: true,
 				Optional: true,
 			},
 

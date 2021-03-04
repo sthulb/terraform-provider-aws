@@ -27,12 +27,10 @@ func resourceAwsSchemasDiscoverer() *schema.Resource {
 			},
 			"description": {
 				Type:     schema.TypeString,
-				Computed: true,
 				Optional: true,
 			},
 			"source_arn": {
 				Type:     schema.TypeString,
-				Computed: true,
 				Required: true,
 				ForceNew: true,
 			},
